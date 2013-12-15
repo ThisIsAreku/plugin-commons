@@ -2,8 +2,8 @@ package fr.areku.minecraft.commons;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 /**
  * Copyright (C) plugin-commons - All Rights Reserved
@@ -19,20 +19,22 @@ public class MySQLPool {
 
     private Connection conn;
 
-    public static void setConnectionData(String host, String db, int port, String user, String password) {
+    protected static void setConnectionData(String url, String user, String password) {
         MySQLPool.user = user;
         MySQLPool.password = password;
-        MySQLPool.url = "jdbc:mysql://" + host + ":" + port + "/" + db;
+        MySQLPool.url = url;
     }
 
-    public static MySQLPool getPool() throws ClassNotFoundException {
+    public static MySQLPool getPool() throws Exception {
         if (instance == null)
-            instance = new MySQLPool();
+            throw new Exception("MySQL is not ready");
         return instance;
     }
 
-    private MySQLPool() throws ClassNotFoundException {
+    protected MySQLPool() throws ClassNotFoundException, SQLException {
+        instance = this;
         loadClass();
+        connect();
     }
 
     private void loadClass() throws ClassNotFoundException {
@@ -52,6 +54,8 @@ public class MySQLPool {
     }
 
     private void openConnection() throws SQLException {
+        if (checkConnectionIsAlive(false))
+            return;
         try {
             conn = DriverManager.getConnection(this.url, this.user, this.password);
         } catch (SQLException e) {
@@ -63,29 +67,33 @@ public class MySQLPool {
         if (conn != null) conn.close();
     }
 
-    public boolean checkConnectionIsAlive(boolean reopen) throws SQLException {
-        if (conn == null) {
-            if (reopen) {
-                openConnection();
-                return checkConnectionIsAlive(false);
+    public boolean checkConnectionIsAlive(boolean reopen) {
+        try {
+            if (conn == null) {
+                if (reopen) {
+                    openConnection();
+                    return checkConnectionIsAlive(false);
+                }
+                return false;
             }
-            return false;
-        }
-        if (conn.isClosed()) {
-            return false;
-        }
-        if (conn.isValid(10)) {
-            return true;
-        } else {
-            if (reopen) {
-                openConnection();
-                return checkConnectionIsAlive(false);
+            if (conn.isClosed()) {
+                return false;
             }
+            if (conn.isValid(10)) {
+                return true;
+            } else {
+                if (reopen) {
+                    openConnection();
+                    return checkConnectionIsAlive(false);
+                }
+                return false;
+            }
+        } catch (SQLException e) {
             return false;
         }
     }
 
-    public Statement prepareStatement(String sql) throws SQLException {
+    public PreparedStatement prepareStatement(String sql) throws SQLException {
         return conn.prepareStatement(sql);
     }
 }
