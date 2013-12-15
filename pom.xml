@@ -6,7 +6,7 @@
 
     <groupId>fr.areku.minecraft</groupId>
     <artifactId>plugin-commons</artifactId>
-    <version>1.2.1</version>
+    <version>1.3-SNAPSHOT</version>
 
     <name>plugin-commons</name>
     <description>Library for many of my plugins</description>
@@ -32,7 +32,7 @@
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
             <!-- Bukkit API Version, change if necessary -->
-            <version>1.6.4-R2.0</version>
+            <version>1.7.2-R0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
